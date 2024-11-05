@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2024_11_04_133731) do
+ActiveRecord::Schema[7.2].define(version: 2024_11_05_055619) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
   enable_extension "uuid-ossp"
@@ -26,7 +26,7 @@ ActiveRecord::Schema[7.2].define(version: 2024_11_04_133731) do
   create_table "transactions", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.uuid "account_id", null: false
     t.decimal "amount"
-    t.string "transaction_type"
+    t.integer "transaction_type", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["account_id"], name: "index_transactions_on_account_id"
@@ -38,6 +38,7 @@ ActiveRecord::Schema[7.2].define(version: 2024_11_04_133731) do
     t.string "password_digest"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "role", default: 0, null: false
   end
 
   add_foreign_key "accounts", "users"

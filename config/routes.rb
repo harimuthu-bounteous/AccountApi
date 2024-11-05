@@ -7,4 +7,8 @@ Rails.application.routes.draw do
 
   # Defines the root path route ("/")
   # root "posts#index"
+
+  # Define a routes for the Users controller
+  post "/auth/register" => "users#register"
+  post "/auth/login" => "users#login"
 end
