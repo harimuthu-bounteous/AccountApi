@@ -11,6 +11,16 @@ class UsersController < ApplicationController
     end
   end
 
+  def register_admin
+    @user = User.new(user_params.merge(role: "admin"))
+    if @user.save
+      token = encode_token({ user_id: @user.id })
+      render json: { user: @user, token: token }, status: :created
+    else
+      render json: { errors: @user.errors.full_messages }, status: :unprocessable_entity
+    end
+  end
+
   def login
     @user = User.find_by(email: params[:email])
     if @user && @user.authenticate(params[:password])
