@@ -15,7 +15,6 @@ class AccountsController < ApplicationController
   end
 
   # GET /accounts/:account_number
-  # Accessible by account owner or admin
   def show
     render json: @account
   end

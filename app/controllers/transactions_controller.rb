@@ -1,72 +1,62 @@
 class TransactionsController < ApplicationController
-  before_action :set_transaction, only: [ :show ]
   before_action :set_account, only: [ :create ]
-  before_action :authorize_user_or_admin!, only: [ :index, :show, :create ]
+  before_action :set_transaction, only: [ :show, :update, :destroy ]
 
-  # GET /transactions
   def index
-    @transactions = current_user.admin? ? Transaction.all : current_user_transactions
-    render json: @transactions
+    @transactions = Transaction.all
+    render json: @transactions, status: :ok
   end
 
-  # GET /transactions/:id
   def show
-    render json: @transaction
+    render json: @transaction, status: :ok
   end
 
-  # POST /transactions
   def create
-    @transaction = @account.transactions.build(transaction_params)
-    if @transaction.save
-      update_account_balance!(@transaction)
-      render json: @transaction, status: :created
+    context = TransactionsContext.new(@account)
+    result = context.create_transaction(transaction_params)
+
+    if result[:success]
+      render json: result[:transaction], status: :created
     else
-      render json: @transaction.errors, status: :unprocessable_entity
+      render json: { errors: result[:errors] }, status: :unprocessable_entity
+    end
+  end
+
+  def update
+    context = TransactionsContext.new(@transaction.account)
+    result = context.update_transaction(@transaction, transaction_params)
+
+    if result[:success]
+      render json: result[:transaction], status: :ok
+    else
+      render json: { errors: result[:errors] }, status: :unprocessable_entity
+    end
+  end
+
+  def destroy
+    context = TransactionsContext.new(@transaction.account)
+    result = context.destroy_transaction(@transaction)
+
+    if result[:success]
+      head :no_content
+    else
+      render json: { errors: result[:errors] }, status: :unprocessable_entity
     end
   end
 
   private
 
+  def set_account
+    @account = Account.find_by(account_number: params[:account_number])
+    render json: { errors: [ "Account not found" ] }, status: :not_found unless @account
+  end
+
   def set_transaction
     @transaction = Transaction.find(params[:id])
-    authorize_transaction_access!(@transaction)
-  end
-
-  def set_account
-    @account = Account.find(params[:account_id])
-    authorize_account_access!(@account)
-  end
-
-  def authorize_account_access!(account)
-    unless account.user_id == current_user.id || current_user.admin?
-      render json: { errors: [ "Forbidden" ] }, status: :forbidden
-    end
-  end
-
-  def authorize_transaction_access!(transaction)
-    unless transaction.account.user_id == current_user.id || current_user.admin?
-      render json: { errors: [ "Forbidden" ] }, status: :forbidden
-    end
+    render json: { errors: [ "Transaction not found" ] }, status: :not_found unless @transaction
   end
 
   def transaction_params
     params.require(:transaction).permit(:amount, :transaction_type)
-  end
-
-  def update_account_balance!(transaction)
-    case transaction.transaction_type
-    when "deposit"
-      transaction.account.increment!(:balance, transaction.amount)
-    when "withdrawal"
-      if transaction.account.balance >= transaction.amount
-        transaction.account.decrement!(:balance, transaction.amount)
-      else
-        render json: { errors: [ "Insufficient funds" ] }, status: :unprocessable_entity
-      end
-    end
-  end
-
-  def current_user_transactions
-    Transaction.joins(:account).where(accounts: { user_id: current_user.id })
   end
 end

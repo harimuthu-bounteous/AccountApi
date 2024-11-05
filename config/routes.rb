@@ -11,10 +11,12 @@ Rails.application.routes.draw do
   get "/accounts" => "accounts#index"
   get "/accounts/:account_number" => "accounts#show"
   post "/accounts" => "accounts#create"
-  put "/accounts/:id" => "accounts#update"
-  delete "/accounts/:id" => "accounts#destroy"
+  put "/accounts/:account_number" => "accounts#update"
+  delete "/accounts/:account_number" => "accounts#destroy"
 
   get "/transactions" => "transactions#index"
   get "/transactions/:id" => "transactions#show"
-  post "/transactions" => "transactions#create"
+  post "/accounts/:account_number/transactions" => "transactions#create"
+  put "/transactions/:id" => "transactions#update"
+  delete "/transactions/:id" => "transactions#destroy"
 end
