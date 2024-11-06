@@ -1,6 +1,6 @@
 class AccountsController < ApplicationController
   before_action :set_account, only: [ :show, :update, :destroy ]
-  # before_action :authorize_admin!, only: [ :index ]
+  before_action :authorize_admin!, only: [ :index ]
   before_action :authorize_user_or_admin!, only: [ :show, :create, :update, :destroy ]
 
   # GET /accounts
@@ -52,10 +52,10 @@ class AccountsController < ApplicationController
 
   private
 
-  # def set_account
-  #   @account = Account.find(params[:id])
-  #   authorize_account_access!(@account)
-  # end
+  def set_account
+    @account = Account.find(params[:id])
+    authorize_account_access!(@account)
+  end
 
   def authorize_account_access!(account)
     unless account.user_id == current_user.id || current_user.admin?

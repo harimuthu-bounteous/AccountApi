@@ -2,43 +2,44 @@ class UsersController < ApplicationController
   skip_before_action :authenticate_user, only: [ :register, :login ]
 
   def register
-    @user = User.new(user_params)
-    if @user.save
-      token = encode_token({ user_id: @user.id })
-      render json: { user: @user, token: token }, status: :created
+    result = UserService.register_user(user_params)
+    if result[:errors]
+      render json: { errors: result[:errors] }, status: :unprocessable_entity
     else
-      render json: { errors: @user.errors.full_messages }, status: :unprocessable_entity
+      render json: { user: result[:user], token: result[:token] }, status: :created
     end
+  rescue ActiveRecord::RecordInvalid => e
+    Rails.logger.error("Error in register : #{e.record.errors.full_messages}")
+    render json: { errors: e.record.errors.full_messages }, status: :unprocessable_entity
   end
 
   def register_admin
-    @user = User.new(user_params.merge(role: "admin"))
-    if @user.save
-      token = encode_token({ user_id: @user.id })
-      render json: { user: @user, token: token }, status: :created
+    result = UserService.register_admin(user_params)
+    if result[:errors]
+      render json: { errors: result[:errors] }, status: :unprocessable_entity
     else
-      render json: { errors: @user.errors.full_messages }, status: :unprocessable_entity
+      render json: { user: result[:user], token: result[:token] }, status: :created
     end
+  rescue ActiveRecord::RecordInvalid => e
+    Rails.logger.error("Error in register_admin : #{e.record.errors.full_messages}")
+    render json: { errors: e.record.errors.full_messages }, status: :unprocessable_entity
   end
 
   def login
-    @user = User.find_by(email: params[:email])
-    if @user && @user.authenticate(params[:password])
-      token = encode_token({ user_id: @user.id })
-      render json: { user: { id: @user.id, username: @user.username, email: @user.email, role: @user.role }, token: token }, status: :ok
+    result = UserService.login(params[:email], params[:password])
+    if result[:errors]
+      render json: { errors: result[:errors] }, status: :unauthorized
     else
-      render json: { errors: [ "Invalid email or password" ] }, status: :unauthorized
+      render json: { user: result[:user], token: result[:token] }, status: :ok
     end
+  rescue StandardError => e
+    Rails.logger.error("Error in login : #{e.message}")
+    render json: { errors: [ e.message ] }, status: :not_found
   end
 
   private
 
   def user_params
     params.require(:user).permit(:email, :password, :username)
-  end
-
-  def encode_token(payload)
-    payload[:exp] = 1.day.from_now.to_i
-    JWT.encode(payload, Rails.application.credentials.secret_key_base)
   end
 end
