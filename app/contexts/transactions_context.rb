@@ -3,6 +3,13 @@ class TransactionsContext
     @account = account
   end
 
+  def get_transactions_by_account_number(account_number)
+    account = Account.find_by(account_number: account_number)
+    return { success: false, errors: [ "Account not found" ] } unless account
+
+    { success: true, transactions: account.transactions }
+  end
+
   def create_transaction(transaction_params)
     # Ensure sufficient balance for withdrawals
     if transaction_params[:transaction_type] == "withdrawal" && @account.balance < transaction_params[:amount].to_f

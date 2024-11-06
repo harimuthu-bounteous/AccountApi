@@ -17,6 +17,7 @@ Rails.application.routes.draw do
   get "/transactions" => "transactions#index"
   get "/transactions/:id" => "transactions#show"
   post "/accounts/:account_number/transactions" => "transactions#create"
+  get "/accounts/:account_number/transactions" => "transactions#show_transactions"
   put "/transactions/:id" => "transactions#update"
   delete "/transactions/:id" => "transactions#destroy"
 end
