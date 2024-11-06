@@ -1,59 +1,64 @@
 class AccountsController < ApplicationController
   before_action :set_account, only: [ :show, :update, :destroy ]
   before_action :authorize_admin!, only: [ :index ]
-  before_action :authorize_user_or_admin!, only: [ :show, :create, :update, :destroy ]
+  before_action :authorize_user!, only: [ :show, :create, :update, :destroy ]
 
   # GET /accounts
-  # Accessible only by admin
   def index
-    if current_user.admin?
-      @accounts = Account.includes(:user).select(:id,  :balance, :created_at, :user_id)
-      render json: @accounts.as_json(include: { user: { only: [ :id, :username, :email ] } })
-    else
-      render json: { error: "Access denied" }, status: :forbidden
-    end
+    @accounts = Account.includes(:user)
+    render json: @accounts, each_serializer: AccountSerializer
+  rescue => e
+    render json: { errors: [ "Error in 'accounts#index' : ", e.message ] }, status: :unprocessable_entity
   end
+
 
   # GET /accounts/:account_number
   def show
-    render json: @account
+    render json: @account, each_serializer: AccountSerializer
+  rescue => e
+    render json: { errors: [ "Error in 'accounts#show' : ", e.message ] }, status: :unprocessable_entity
   end
 
   # POST /accounts
   def create
-    # Rails.logger.info("Current user: #{current_user.inspect}")
-    unless current_user
-      return render json: { errors: [ "Unauthorized in here" ] }, status: :unauthorized
-    end
-    @account = current_user.accounts.build
-    @account.balance ||= 0 # Ensure balance is set to zero if not provided
-    if @account.save
-      render json: @account, status: :created
-    else
-      render json: @account.errors, status: :unprocessable_entity
+    begin
+      account_service = AccountService.new(current_user)
+      @account = account_service.create_account
+      render json: AccountSerializer.new(@account).serializable_hash, status: :created
+    rescue ActiveRecord::RecordInvalid => e
+      render json: { errors: [ "Account creation failed", e.message ] }, status: :unprocessable_entity
     end
   end
 
-
   # PUT /accounts/:account_number
   def update
-    if @account.update(account_params)
-      render json: @account
-    else
-      render json: @account.errors, status: :unprocessable_entity
+    begin
+      account_service = AccountService.new(current_user, account_params)
+      @account = account_service.update_account(@account)
+      render json: AccountSerializer.new(@account).serializable_hash
+    rescue ActiveRecord::RecordInvalid => e
+      render json: { errors: [ "Account update failed", e.message ] }, status: :unprocessable_entity
     end
   end
 
   # DELETE /accounts/:account_number
   def destroy
-    @account.destroy
-    head :no_content
+    begin
+      account_service = AccountService.new(current_user, account_params)
+      account_service.destroy_account(@account)
+      head :no_content
+    rescue => e
+      render json: { errors: [ "Error deleting account", e.message ] }, status: :unprocessable_entity
+    end
   end
 
   private
 
   def set_account
-    @account = Account.find(params[:id])
+    @account = Account.find_by(account_number: params[:account_number])
+    unless @account
+      render json: { error: "Account not found" }, status: :not_found and return
+    end
     authorize_account_access!(@account)
   end
 
@@ -65,13 +70,5 @@ class AccountsController < ApplicationController
 
   def account_params
     params.require(:account).permit(:balance)
-  end
-
-  def set_account
-    @account = Account.find_by(account_number: params[:account_number])
-    unless @account
-      render json: { error: "Account not found" }, status: :not_found and return
-    end
-    authorize_account_access!(@account)
   end
 end

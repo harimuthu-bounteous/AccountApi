@@ -1,5 +1,5 @@
 class AccountService
-  def initialize(user, account_params)
+  def initialize(user, account_params = { balance: 0 })
     @user = user
     @account_params = account_params
   end
