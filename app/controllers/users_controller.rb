@@ -1,5 +1,6 @@
+# app/controllers/accounts_controller.rb
 class UsersController < ApplicationController
-  skip_before_action :authenticate_user, only: [ :register, :login ]
+  skip_before_action :authenticate_user, only: [ :register, :login, :register_admin ]
 
   def register
     result = UserService.register_user(user_params)
@@ -34,7 +35,7 @@ class UsersController < ApplicationController
     end
   rescue StandardError => e
     Rails.logger.error("Error in login : #{e.message}")
-    render json: { errors: [ e.message ] }, status: :not_found
+    render json: { errors: [ e.message ] }, status: :unauthorized
   end
 
   private

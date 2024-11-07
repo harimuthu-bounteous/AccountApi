@@ -11,7 +11,6 @@ class AccountsController < ApplicationController
     render json: { errors: [ "Error in 'accounts#index' : ", e.message ] }, status: :unprocessable_entity
   end
 
-
   # GET /accounts/:account_number
   def show
     render json: @account, each_serializer: AccountSerializer
@@ -22,9 +21,9 @@ class AccountsController < ApplicationController
   # POST /accounts
   def create
     begin
-      account_service = AccountService.new(current_user)
+      account_service = AccountService.new(current_user, { balance: 0 })
       @account = account_service.create_account
-      render json: AccountSerializer.new(@account).serializable_hash, status: :created
+      render json: @account, each_serializer: AccountSerializer, status: :created
     rescue ActiveRecord::RecordInvalid => e
       render json: { errors: [ "Account creation failed", e.message ] }, status: :unprocessable_entity
     end
@@ -44,7 +43,7 @@ class AccountsController < ApplicationController
   # DELETE /accounts/:account_number
   def destroy
     begin
-      account_service = AccountService.new(current_user, account_params)
+      account_service = AccountService.new(current_user, {})
       account_service.destroy_account(@account)
       head :no_content
     rescue => e

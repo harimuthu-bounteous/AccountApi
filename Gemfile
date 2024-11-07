@@ -31,6 +31,7 @@ gem "bootsnap", require: false
 
 # Additional Gems
 gem "jwt"
+gem "faker"
 gem "active_model_serializers"
 
 group :development, :test do
@@ -42,4 +43,8 @@ group :development, :test do
 
   # Omakase Ruby styling [https://github.com/rails/rubocop-rails-omakase/]
   gem "rubocop-rails-omakase", require: false
+
+  # My Gems
+  gem "rspec-rails"
+  gem "factory_bot_rails"
 end

@@ -1,3 +1,4 @@
+# app/services/user_service.rb
 class UserService
   include CustomErrors
 
