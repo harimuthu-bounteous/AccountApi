@@ -1,7 +1,5 @@
 # app/services/user_service.rb
 class UserService
-  include CustomErrors
-
   def self.register_user(user_params)
     user = User.new(user_params)
     if user.save
