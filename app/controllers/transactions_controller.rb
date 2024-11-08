@@ -1,3 +1,4 @@
+# app/controllers/transactions_controller.rb
 class TransactionsController < ApplicationController
   before_action :set_account, only: [ :create, :show_transactions ]
   before_action :set_transaction, only: [ :show, :update, :destroy ]
@@ -16,8 +17,7 @@ class TransactionsController < ApplicationController
   end
 
   def create
-    context = TransactionsContext.new(@account)
-    result = context.create_transaction(transaction_params)
+    result = TransactionService.create_transaction(@account, transaction_params)
 
     if result[:success]
       render json: result[:transaction], status: :created
@@ -29,20 +29,19 @@ class TransactionsController < ApplicationController
   end
 
   def show_transactions
-    # Rails.logger.info("account: #{@account.inspect}")
-    context = TransactionsContext.new(@account)
-    res = context.get_transactions_by_account_number(params[:account_number])
-    Rails.logger.info("res: #{res}")
+    result = TransactionService.get_transactions_by_account_number(params[:account_number])
 
-    @transactions = @account.transactions
-    render json: @transactions, status: :ok
+    if result[:success]
+      render json: result[:transactions], status: :ok
+    else
+      render json: { errors: result[:errors] }, status: :not_found
+    end
   rescue => e
     render json: { errors: [ "Error in 'transactions#show_transactions' : ", e.message ] }, status: :unprocessable_entity
   end
 
   def update
-    context = TransactionsContext.new(@transaction.account)
-    result = context.update_transaction(@transaction, transaction_params)
+    result = TransactionsService.update_transaction(@transaction.account, @transaction, transaction_params)
 
     if result[:success]
       render json: result[:transaction], status: :ok
@@ -54,8 +53,7 @@ class TransactionsController < ApplicationController
   end
 
   def destroy
-    context = TransactionsContext.new(@transaction.account)
-    result = context.destroy_transaction(@transaction)
+    result = TransactionsService.destroy_transaction(@transaction.account, @transaction)
 
     if result[:success]
       head :no_content

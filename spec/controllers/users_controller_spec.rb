@@ -5,14 +5,14 @@ RSpec.describe UsersController, type: :controller do
   describe "POST /auth/register" do
     context "when registration is successful" do
       it "creates a new user and returns a token" do
-        post :register, params: { user: { email: "user@example.com", password: "password", username: "user" } }    #    --> Without FactoryBot
+        post :register, params: { user: { email: "testuser1@email.com", password: "test123", username: "testuser1" } }    #    --> Without FactoryBot
         # post :register, params: { user: FactoryBot.attributes_for(:user) }                                            --> With FactoryBot without configuring FactoryBotRails in spec_helper.rb
         # post :register, params: { user: attributes_for(:user) }                                                  #    --> With FactoryBot and configuring FactoryBotRails in spec_helper.rb
 
         expect(response).to have_http_status(:created)
         expect(JSON.parse(response.body)).to have_key("token")
-        expect(JSON.parse(response.body)["user"]["email"]).to eq("user@example.com")
-        expect(JSON.parse(response.body)["user"]["username"]).to eq("user")
+        expect(JSON.parse(response.body)["user"]["email"]).to eq("testuser1@email.com")
+        expect(JSON.parse(response.body)["user"]["username"]).to eq("testuser1")
       end
     end
 
@@ -69,7 +69,7 @@ RSpec.describe UsersController, type: :controller do
 
         expect(response).to have_http_status(:ok)
         expect(JSON.parse(response.body)).to have_key("token")
-        expect(JSON.parse(response.body)["user"]["email"]).to eq("testuser@example.com")
+        expect(JSON.parse(response.body)["user"]["email"]).to eq("testuser1@email.com")
       end
     end
 

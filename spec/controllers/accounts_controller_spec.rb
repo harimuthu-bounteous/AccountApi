@@ -2,7 +2,7 @@
 require 'rails_helper'
 
 RSpec.describe AccountsController, type: :controller do
-  let(:user) { create(:user) }  # Assume the 'testuser' already exists
+  let(:user) { create(:user) }
   let(:admin) { create(:user, role: "admin", email: "admin@example.com") }
   let(:account) { create(:account, user: user) }
   let(:valid_token) { JwtService.encode(user_id: user.id) } # Generate a valid token
