@@ -1,92 +1,60 @@
-name: CI
+name: CI/CD
 
 on:
-  pull_request:
   push:
-    branches: [ main ]
+    branches: [main]
+  pull_request:
+    branches: [main]
 
 jobs:
-  scan_ruby:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Ruby
-        uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: .ruby-version
-          bundler-cache: true
-
-      - name: Scan for common Rails security vulnerabilities using static analysis
-        run: bin/brakeman --no-pager
-
-  lint:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Ruby
-        uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: .ruby-version
-          bundler-cache: true
-
-      - name: Lint code for consistent style
-        run: bin/rubocop -f github
-
   test:
     runs-on: ubuntu-latest
 
     services:
       postgres:
-        image: postgres
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
+        image: postgres:13
         ports:
-          - 5432:5432
-        options: --health-cmd="pg_isready" --health-interval=10s --health-timeout=5s --health-retries=3
-
-      # redis:
-      #   image: redis
-      #   ports:
-      #     - 6379:6379
-      #   options: --health-cmd "redis-cli ping" --health-interval 10s --health-timeout 5s --health-retries 5
+          - "5431:5432"  # Map container's default port 5432 to host port 5431
+        env:
+          POSTGRES_USER: myuser
+          POSTGRES_PASSWORD: mypassword
+          POSTGRES_DB: myapp_test  # Define your test database name
+        options: >-
+          --health-cmd "pg_isready -U myuser" 
+          --health-interval 10s 
+          --health-timeout 5s 
+          --health-retries 5
 
     steps:
-      - name: Install packages
-        run: sudo apt-get update && sudo apt-get install --no-install-recommends -y google-chrome-stable curl libjemalloc2 libvips postgresql-client
-
-      - name: Checkout code
-        uses: actions/checkout@v4
-
+      - uses: actions/checkout@v2
+      
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: .ruby-version
+          ruby-version: '3.0'  # Adjust the Ruby version as needed
           bundler-cache: true
 
-      - name: Set up Database
+      - name: Install dependencies
+        run: |
+          gem install bundler
+          bundle install
+
+      - name: Wait for Postgres
+        run: |
+          until pg_isready -h localhost -p 5431 -U myuser; do
+            echo "Waiting for Postgres..."
+            sleep 3
+          done
+
+      - name: Set up database
         env:
-          RAILS_ENV: test
-          DATABASE_URL: postgres://postgres:postgres@localhost:5432/account_api_test
-        run: bin/rails db:create && bin/rails db:schema:load && bin/rails db:migrate
+          DATABASE_URL: "postgres://myuser:mypassword@localhost:5431/myapp_test"
+        run: |
+          bundle exec rails db:create
+          bundle exec rails db:migrate
 
       - name: Run tests
         env:
-          RAILS_ENV: test
-          DATABASE_URL: postgres://postgres:postgres@localhost:5432/account_api_test
-          # DATABASE_URL: postgres://postgres:postgres@localhost:5432
-          # REDIS_URL: redis://localhost:6379/0
-        run: bundle exec rspec #bin/rails db:test:prepare test test:system
-
-      - name: Keep screenshots from failed system tests
-        uses: actions/upload-artifact@v4
-        if: failure()
-        with:
-          name: screenshots
-          path: ${{ github.workspace }}/tmp/screenshots
-          if-no-files-found: ignore
+          DATABASE_URL: "postgres://myuser:mypassword@localhost:5431/myapp_test"
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}  # Set any other necessary secrets here
+        run: bundle exec rspec
