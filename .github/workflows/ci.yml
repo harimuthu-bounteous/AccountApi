@@ -75,8 +75,8 @@ jobs:
           DATABASE_URL: postgres://postgres:postgres@localhost:5432/account_api_test
         run: |
           bin/rails db:create
-          # bin/rails db:schema:load # or 
-          bin/rails db:migrate # if you prefer
+          bin/rails db:schema:load 
+          bin/rails db:migrate 
 
 
       - name: Run tests
