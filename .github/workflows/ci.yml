@@ -1,13 +1,15 @@
-name: CI/CD
+name: CI
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
   pull_request:
-    branches: [main]
+    branches:
+      - main
 
 jobs:
-  test:
+  build:
     runs-on: ubuntu-latest
 
     services:
@@ -31,7 +33,7 @@ jobs:
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: '3.0'  # Adjust the Ruby version as needed
+          ruby-version: '3.3.5'  # Adjust the Ruby version as needed
           bundler-cache: true
 
       - name: Install dependencies
@@ -43,18 +45,28 @@ jobs:
         run: |
           until pg_isready -h localhost -p 5431 -U myuser; do
             echo "Waiting for Postgres..."
-            sleep 3
+            sleep 1
           done
 
-      - name: Set up database
+      - name: Set up Database
         env:
-          DATABASE_URL: "postgres://myuser:mypassword@localhost:5431/myapp_test"
+          RAILS_ENV: test
+          DATABASE_URL: postgres://myuser:mypassword@localhost:5431/myapp_test
         run: |
-          bundle exec rails db:create
-          bundle exec rails db:migrate
+          bin/rails db:create
+          bin/rails db:schema:load
+          bin/rails db:migrate
 
       - name: Run tests
         env:
-          DATABASE_URL: "postgres://myuser:mypassword@localhost:5431/myapp_test"
-          JWT_SECRET: ${{ secrets.JWT_SECRET }}  # Set any other necessary secrets here
+          RAILS_ENV: test
+          DATABASE_URL: postgres://myuser:mypassword@localhost:5431/myapp_test
         run: bundle exec rspec
+
+      - name: Keep screenshots from failed system tests
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: screenshots
+          path: ${{ github.workspace }}/tmp/screenshots
+          if-no-files-found: ignore
