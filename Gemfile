@@ -33,6 +33,9 @@ gem "bootsnap", require: false
 gem "jwt"
 gem "faker"
 gem "active_model_serializers"
+# gem "selenium-webdriver"
+# gem "webdrivers"
+
 
 group :development, :test do
   # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem
@@ -47,4 +50,7 @@ group :development, :test do
   # My Gems
   gem "rspec-rails"
   gem "factory_bot_rails"
+  # gem "capybara"
+  # gem "selenium-webdriver" # Needed if using Selenium for system tests
+  # gem "webdrivers"
 end
