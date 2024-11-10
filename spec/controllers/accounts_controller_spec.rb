@@ -9,6 +9,9 @@ RSpec.describe AccountsController, type: :controller do
 
   before do
     request.headers['Authorization'] = "Bearer #{valid_token}"
+    @user = user
+    @token = valid_token
+    @headers = { Authorization: "Bearer #{@token}" }
     allow(controller).to receive(:current_user).and_return(user)
   end
 
@@ -16,9 +19,10 @@ RSpec.describe AccountsController, type: :controller do
   describe "GET #index" do
     context "as an admin user" do
       before do
-        allow(controller).to receive(:authenticate_user).and_return(true)
+        request.headers["Authorization"] = "Bearer #{@token}"
+        # allow(controller).to receive(:authenticate_user).and_return(true)
         allow(controller).to receive(:authorize_admin!).and_return(true)
-        allow(controller).to receive(:current_user).and_return(admin)
+        # allow(controller).to receive(:current_user).and_return(admin)
       end
 
       it "returns a list of accounts" do
@@ -34,8 +38,9 @@ RSpec.describe AccountsController, type: :controller do
   describe "GET #show" do
     context "when the account belongs to the user" do
       before do
-        allow(controller).to receive(:authenticate_user).and_return(true)
-        allow(controller).to receive(:authorize_user!).and_return(true)
+        request.headers["Authorization"] = "Bearer #{@token}"
+        # allow(controller).to receive(:authenticate_user).and_return(true)
+        # allow(controller).to receive(:authorize_user!).and_return(true)
       end
 
       it "returns the account" do
@@ -64,24 +69,13 @@ RSpec.describe AccountsController, type: :controller do
   describe "POST #create" do
     let(:user) { create(:user) }
 
-    before do
-      # Mock authentication by setting current_user
-      allow(controller).to receive(:current_user).and_return(user)
-      # allow(controller).to receive(:authenticate_user).and_return(true)
-      allow(controller).to receive(:authorize_user!).and_return(true)
-    end
-
     context "when account creation is successful" do
       it "creates a new account and returns 201 status" do
         expect { post :create, params: {} }.to change(Account, :count).by(1)
-        # expect { post :create }.to change { Account.count }.by(1)
 
         expect(response).to have_http_status(:created)
 
-        # Parsing the JSON response
         json_response = JSON.parse(response.body)
-
-        # Check expected attributes in the response
         expect(json_response["account_number"]).to be_present
         expect(json_response["balance"]).to eq("0.0")
         expect(json_response["user"]["username"]).to eq(user.username)
