@@ -30,13 +30,7 @@ jobs:
         env:
           RAILS_ENV: test
           DATABASE_URL: ${{ secrets.SUPABASE_DATABASE_URL }}  # Make sure to set your secret in GitHub Secrets
-        run: |
-          PGPASSWORD=$SUPABASE_PASSWORD psql -h $SUPABASE_HOST -U $SUPABASE_USER -d $SUPABASE_DB -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = 'account_api_test';"
-          
-          bin/rails db:environment:set RAILS_ENV=test
-          bin/rails db:create
-          bin/rails db:schema:load
-          bin/rails db:migrate
+        run: bin/rails db:migrate
 
       - name: Run tests
         env:
