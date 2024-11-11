@@ -14,7 +14,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-
+      
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
@@ -26,10 +26,20 @@ jobs:
           gem install bundler
           bundle install
 
+      - name: Set up Database for Supabase
+        env:
+          RAILS_ENV: test
+          DATABASE_URL: ${{ secrets.SUPABASE_DATABASE_URL }}  # Ensure this environment variable is set in your GitHub secrets
+        run: |
+          # Create and migrate the database using the Supabase connection
+          bin/rails db:create
+          bin/rails db:schema:load
+          bin/rails db:migrate
+
       - name: Run tests
         env:
           RAILS_ENV: test
-          DATABASE_URL: ${{ secrets.SUPABASE_DATABASE_URL }}  # Use the Supabase database URL
+          DATABASE_URL: ${{ secrets.SUPABASE_DATABASE_URL }}  # Use the same Supabase database URL for tests
         run: bundle exec rspec
 
       - name: Keep screenshots from failed system tests
