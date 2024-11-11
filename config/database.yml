@@ -18,19 +18,29 @@ default: &default
   # For details on connection pooling, see Rails configuration guide
   # https://guides.rubyonrails.org/configuring.html#database-pooling
   pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
-  username: myuser
-  password: mypassword
-  host: localhost
-  port: 5431
+  # username: myuser
+  # password: mypassword
+  # host: localhost
+  # port: 5431
+  username: postgres.ntgvlygertdxzuxacqnb
+  password: "Haris@24315" # URL-encode special characters if needed, or wrap in quotes
+  host: aws-0-ap-southeast-1.pooler.supabase.com
+  port: 5432
+  sslmode: require
 
 
 development:
   <<: *default
   database: account_api_development
-  username: myuser
-  password: mypassword
-  host: localhost
-  port: 5431
+  # username: myuser
+  # password: mypassword
+  # host: localhost
+  # port: 5431
+  username: postgres.ntgvlygertdxzuxacqnb
+  password: "Haris@24315" # URL-encode special characters if needed, or wrap in quotes
+  host: aws-0-ap-southeast-1.pooler.supabase.com
+  port: 5432
+  sslmode: require
 
   # The specified database role being used to connect to PostgreSQL.
   # To create additional roles in PostgreSQL see `$ createuser --help`.
@@ -62,9 +72,15 @@ development:
 # Warning: The database defined as "test" will be erased and
 # re-generated from your development database when you run "rake".
 # Do not set this db to the same as development or production.
+
 test:
   <<: *default
   database: account_api_test
+  username: postgres.ntgvlygertdxzuxacqnb
+  password: "Haris@24315" # URL-encode special characters if needed, or wrap in quotes
+  host: aws-0-ap-southeast-1.pooler.supabase.com
+  port: 5432
+  sslmode: require
 
 # As with config/credentials.yml, you never want to store sensitive information,
 # like your database password, in your source code. If your source code is
