@@ -26,16 +26,16 @@ jobs:
           gem install bundler
           bundle install
 
-      - name: Set up Database for Supabase
-        env:
-          RAILS_ENV: test
-          DATABASE_URL: ${{ secrets.SUPABASE_DATABASE_URL }}  # Make sure to set your secret in GitHub Secrets
-        run: bin/rails db:migrate
+      # - name: Set up Database for Supabase
+      #   env:
+      #     RAILS_ENV: test
+      #     DATABASE_URL: ${{ secrets.SUPABASE_DATABASE_URL }}  # Make sure to set your secret in GitHub Secrets
+      #   run: bin/rails db:migrate
 
       - name: Run tests
         env:
           RAILS_ENV: test
-          DATABASE_URL: ${{ secrets.SUPABASE_DATABASE_URL }}  # Use the same Supabase database URL for tests
+          # DATABASE_URL: ${{ secrets.SUPABASE_DATABASE_URL }}  # Use the same Supabase database URL for tests
         run: bundle exec rspec
 
       - name: Keep screenshots from failed system tests
