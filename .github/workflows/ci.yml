@@ -12,24 +12,9 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-    services:
-      postgres:
-        image: postgres:13
-        ports:
-          - "5431:5432"  # Map container's default port 5432 to host port 5431
-        env:
-          POSTGRES_USER: myuser
-          POSTGRES_PASSWORD: mypassword
-          POSTGRES_DB: myapp_test  # Define your test database name
-        options: >-
-          --health-cmd "pg_isready -U myuser" 
-          --health-interval 10s 
-          --health-timeout 5s 
-          --health-retries 5
-
     steps:
       - uses: actions/checkout@v2
-      
+
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
@@ -41,26 +26,10 @@ jobs:
           gem install bundler
           bundle install
 
-      - name: Wait for Postgres
-        run: |
-          until pg_isready -h localhost -p 5431 -U myuser; do
-            echo "Waiting for Postgres..."
-            sleep 1
-          done
-
-      - name: Set up Database
-        env:
-          RAILS_ENV: test
-          DATABASE_URL: postgres://myuser:mypassword@localhost:5431/myapp_test
-        run: |
-          bin/rails db:create
-          bin/rails db:schema:load
-          bin/rails db:migrate
-
       - name: Run tests
         env:
           RAILS_ENV: test
-          DATABASE_URL: postgres://myuser:mypassword@localhost:5431/myapp_test
+          DATABASE_URL: ${{ secrets.SUPABASE_DATABASE_URL }}  # Use the Supabase database URL
         run: bundle exec rspec
 
       - name: Keep screenshots from failed system tests
