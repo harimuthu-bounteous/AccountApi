@@ -12,6 +12,21 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    services:
+      postgres:
+        image: postgres:13
+        ports:
+          - "5432:5432"  # Use the default PostgreSQL port
+        env:
+          POSTGRES_USER: myuser
+          POSTGRES_PASSWORD: mypassword
+          POSTGRES_DB: account_api_test
+        options: >-
+          --health-cmd "pg_isready -U myuser" 
+          --health-interval 10s 
+          --health-timeout 5s 
+          --health-retries 5
+
     steps:
       - uses: actions/checkout@v2
       
@@ -26,16 +41,26 @@ jobs:
           gem install bundler
           bundle install
 
-      # - name: Set up Database for Supabase
-      #   env:
-      #     RAILS_ENV: test
-      #     DATABASE_URL: "" # Make sure to set your secret in GitHub Secrets
-      #   run: bin/rails db:migrate
+      - name: Wait for Postgres
+        run: |
+          until pg_isready -h localhost -p 5432 -U myuser; do
+            echo "Waiting for Postgres..."
+            sleep 1
+          done
+
+      - name: Set up Database
+        env:
+          RAILS_ENV: test
+          DATABASE_URL: postgres://myuser:mypassword@localhost:5432/account_api_test
+        run: |
+          bin/rails db:create
+          bin/rails db:schema:load
+          bin/rails db:migrate
 
       - name: Run tests
         env:
           RAILS_ENV: test
-          # DATABASE_URL: ${{ secrets.SUPABASE_DATABASE_URL }}  # Use the same Supabase database URL for tests
+          DATABASE_URL: postgres://myuser:mypassword@localhost:5432/account_api_test
         run: bundle exec rspec
 
       - name: Keep screenshots from failed system tests
