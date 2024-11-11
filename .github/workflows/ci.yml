@@ -16,7 +16,7 @@ jobs:
       postgres:
         image: postgres:13
         ports:
-          - "5432:5432"  # Use the default PostgreSQL port
+          - "5432:5432"
         env:
           POSTGRES_USER: myuser
           POSTGRES_PASSWORD: mypassword
@@ -33,7 +33,7 @@ jobs:
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: '3.3.5'  # Adjust the Ruby version as needed
+          ruby-version: '3.3.5'
           bundler-cache: true
 
       - name: Install dependencies
@@ -62,7 +62,7 @@ jobs:
           RAILS_ENV: test
           DATABASE_URL: postgres://myuser:mypassword@localhost:5432/account_api_test
           JWT_SECRET: oHDRpKZLkmqnwlgNvhifyWmMGGeYYRziaX4DIdZlIdjpYKeAJoEkSnnSffHcjXDChR8N0SjCxL8fPc8hlFH5Zf8aWcUwPnokIFyDWUBCzcM5kt6KPOa0ytbj95To6ZUh
-
+          SECRET_KEY_BASE: ${{ secrets.SECRET_KEY_BASE }}  # Use the secret key from GitHub Secrets
         run: bundle exec rspec
 
       - name: Keep screenshots from failed system tests
