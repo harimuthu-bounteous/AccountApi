@@ -31,7 +31,7 @@ jobs:
           RAILS_ENV: test
           DATABASE_URL: ${{ secrets.SUPABASE_DATABASE_URL }}  # Ensure this environment variable is set in your GitHub secrets
         run: |
-          # Create and migrate the database using the Supabase connection
+          bin/rails db:environment:set RAILS_ENV=test   # Set environment for test
           bin/rails db:create
           bin/rails db:schema:load
           bin/rails db:migrate
