@@ -2,9 +2,9 @@
 require 'rails_helper'
 
 RSpec.describe AccountsController, type: :controller do
-  let(:user) { create(:user) }
-  let(:admin) { create(:user, role: "admin", email: "admin@example.com") }
-  let(:account) { create(:account, user: user) }
+  let(:user) { User.create(username: "testuser1", email: "testuser1@email.com", password: "test123", role: "user") }
+  let(:admin) { User.create(username: "admin", email: "admin@email.com", password: "admin", role: "admin") }
+  let(:account) { Account.create(user: user, account_number: "46861569809056088756", balance: 0.0) }
   let(:valid_token) { JwtService.encode(user_id: user.id) } # Generate a valid token
 
   before do
@@ -20,13 +20,11 @@ RSpec.describe AccountsController, type: :controller do
     context "as an admin user" do
       before do
         request.headers["Authorization"] = "Bearer #{@token}"
-        # allow(controller).to receive(:authenticate_user).and_return(true)
         allow(controller).to receive(:authorize_admin!).and_return(true)
-        # allow(controller).to receive(:current_user).and_return(admin)
       end
 
       it "returns a list of accounts" do
-        2.times { create(:account, user: create(:user, email: Faker::Internet.unique.email)) }
+        2.times { Account.create(user: User.create(username: "user_#{rand(1000)}", email: Faker::Internet.unique.email, password: "password")) }
         get :index
         expect(response).to have_http_status(:ok)
         expect(JSON.parse(response.body).size).to eq(2)
@@ -35,12 +33,10 @@ RSpec.describe AccountsController, type: :controller do
   end
 
   # ✅
-  describe "GET #show" do
-    context "when the account belongs to the user" do
+  describe "GET #show =>" do
+    context "when the account belongs to the user =>" do
       before do
         request.headers["Authorization"] = "Bearer #{@token}"
-        # allow(controller).to receive(:authenticate_user).and_return(true)
-        # allow(controller).to receive(:authorize_user!).and_return(true)
       end
 
       it "returns the account" do
@@ -50,13 +46,12 @@ RSpec.describe AccountsController, type: :controller do
       end
     end
 
-    context "when the account does not belong to the user" do
-      let(:other_user) { create(:user, email: Faker::Internet.unique.email, role: "user") } # Ensure a unique email
-      let(:other_account) { create(:account, user: other_user) }
+    context "when the account does not belong to the user =>" do
+      let(:other_user) { User.create(username: "other_user", email: Faker::Internet.unique.email, password: "password", role: "user") }
+      let(:other_account) { Account.create(user: other_user, account_number: "46861569809056088786", balance: 0.0) }
 
       before do
         allow(controller).to receive(:authenticate_user).and_return(true)
-        # allow(controller).to receive(:authorize_user!).and_return(true)
       end
 
       it "returns forbidden status" do
@@ -67,7 +62,7 @@ RSpec.describe AccountsController, type: :controller do
   end
 
   describe "POST #create" do
-    let(:user) { create(:user) }
+    let(:user) { User.create(username: "new_user", email: "new_user@example.com", password: "password") }
 
     context "when account creation is successful" do
       it "creates a new account and returns 201 status" do
@@ -85,17 +80,12 @@ RSpec.describe AccountsController, type: :controller do
 
     context "when account creation fails" do
       it "returns an error message and 422 status" do
-        # Mock a failure in the account creation process
         allow_any_instance_of(AccountService).to receive(:create_account).and_raise(ActiveRecord::RecordInvalid)
 
         post :create
 
         expect(response).to have_http_status(:unprocessable_entity)
-
-        # Parsing the JSON response
         json_response = JSON.parse(response.body)
-
-        # Check for error messages in the response
         expect(json_response["errors"]).to include("Account creation failed")
       end
     end
@@ -122,7 +112,6 @@ RSpec.describe AccountsController, type: :controller do
 
   describe "DELETE #destroy" do
     before do
-      # Mock authentication by setting current_user
       allow(controller).to receive(:current_user).and_return(user)
       allow(controller).to receive(:authenticate_user).and_return(true)
       allow(controller).to receive(:authorize_user!).and_return(true)
