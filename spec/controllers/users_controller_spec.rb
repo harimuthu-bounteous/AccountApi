@@ -1,7 +1,7 @@
 # spec/controllers/users_controller_spec.rb
 require 'rails_helper'
 
-RSpec.describe UsersController, type: :controller do
+RSpec.describe Api::V1::UsersController, type: :controller do
   describe "POST /auth/register" do
     context "when registration is successful" do
       it "creates a new user and returns a token" do

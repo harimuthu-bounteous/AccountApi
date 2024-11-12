@@ -1,7 +1,7 @@
 # spec/controllers/accounts_controller_spec.rb
 require 'rails_helper'
 
-RSpec.describe AccountsController, type: :controller do
+RSpec.describe Api::V1::AccountsController, type: :controller do
   let(:user) { User.create(username: "testuser1", email: "testuser1@email.com", password: "test123", role: "user") }
   let(:admin) { User.create(username: "admin", email: "admin@email.com", password: "admin", role: "admin") }
   let(:account) { Account.create(user: user, account_number: "46861569809056088756", balance: 0.0) }

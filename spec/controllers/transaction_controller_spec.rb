@@ -1,7 +1,7 @@
 # spec/controllers/transaction_controller_spec.rb
 require 'rails_helper'
 
-RSpec.describe TransactionsController, type: :controller do
+RSpec.describe Api::V1::TransactionsController, type: :controller do
   let(:user) { create(:user) }
   let(:admin) { create(:admin) }
   let(:account) { create(:account, user: user) }
