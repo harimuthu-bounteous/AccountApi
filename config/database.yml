@@ -17,11 +17,16 @@ default: &default
   encoding: unicode
   # For details on connection pooling, see Rails configuration guide
   # https://guides.rubyonrails.org/configuring.html#database-pooling
+  # pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+  # username: myuser
+  # password: mypassword
+  # host: localhost
+  # port: 5431
   pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
-  username: myuser
-  password: mypassword
-  host: localhost
-  port: 5431
+  username: <%= ENV.fetch("POSTGRES_USER") { 'myuser' } %>
+  password: <%= ENV.fetch("POSTGRES_PASSWORD") { 'mypassword' } %>
+  host: <%= ENV.fetch("DB_HOST") { 'localhost' } %>
+  port: <%= ENV.fetch("DB_PORT") { 5431} %>
   # username: postgres.ntgvlygertdxzuxacqnb
   # password: "Haris@24315" # URL-encode special characters if needed, or wrap in quotes
   # host: aws-0-ap-southeast-1.pooler.supabase.com
